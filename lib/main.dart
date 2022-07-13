@@ -3,8 +3,16 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 
+import 'anchored_adaptive_example.dart';
+import 'app_lifecycle_reactor.dart';
+import 'app_open_ad_manager.dart';
+import 'fluid_example.dart';
+import 'inline_adaptive_example.dart';
+
 void main() {
-  runApp(MaterialApp(home: MyApp(),));
+  runApp(MaterialApp(
+    home: MyApp(),
+  ));
 }
 
 const int maxFailedLoadAttempts = 3;
@@ -17,9 +25,11 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-
   InterstitialAd? _interstitialAd;
   int _numInterstitialLoadAttempts = 0;
+
+  RewardedAd? _rewardedAd;
+  int _numRewardedLoadAttempts = 0;
 
   static final AdRequest request = AdRequest(
     keywords: <String>['foo', 'bar'],
@@ -27,19 +37,25 @@ class _MyAppState extends State<MyApp> {
     nonPersonalizedAds: true,
   );
 
+  late AppLifecycleReactor _appLifecycleReactor;
+
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
 
-    _createInterstitialAd();
+    AppOpenAdManager appOpenAdManager = AppOpenAdManager()..loadAd();
+    _appLifecycleReactor =
+        AppLifecycleReactor(appOpenAdManager: appOpenAdManager);
+    _appLifecycleReactor.listenToAppStateChanges();
 
+    _createInterstitialAd();
   }
 
   void _createInterstitialAd() {
     InterstitialAd.load(
         adUnitId: Platform.isAndroid
-            ? 'ca-app-pub-3940256099942544/1033173712'
+            ? 'ca-app-pub-3940256099942544/8691691433'
             : 'ca-app-pub-3940256099942544/4411468910',
         request: request,
         adLoadCallback: InterstitialAdLoadCallback(
@@ -62,7 +78,7 @@ class _MyAppState extends State<MyApp> {
 
   void _showInterstitialAd() {
     if (_interstitialAd == null) {
-     // secondpage navigator
+      // secondpage navigator
       return;
     }
     _interstitialAd!.fullScreenContentCallback = FullScreenContentCallback(
@@ -91,10 +107,37 @@ class _MyAppState extends State<MyApp> {
       appBar: AppBar(),
       body: Column(
         children: [
-          ElevatedButton(onPressed: () {
-
-            _showInterstitialAd();
-          }, child: Text("Inter"))
+          ElevatedButton(
+              onPressed: () {
+                _showInterstitialAd();
+              },
+              child: Text("Inter")),
+          ElevatedButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => FluidExample()),
+                );
+              },
+              child: Text("Fluid")),
+          ElevatedButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) => InlineAdaptiveExample()),
+                );
+              },
+              child: Text("Inline adaptive")),
+          ElevatedButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) => AnchoredAdaptiveExample()),
+                );
+              },
+              child: Text("Anchored adaptive")),
         ],
       ),
     );
